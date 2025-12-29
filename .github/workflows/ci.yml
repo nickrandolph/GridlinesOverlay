@@ -27,7 +27,7 @@ jobs:
         
     - name: Install workloads
       run: |
-        dotnet workload install android
+        dotnet workload install android wasm-tools
         
     - name: Restore dependencies
       run: dotnet restore GridlinesOverlay.sln
