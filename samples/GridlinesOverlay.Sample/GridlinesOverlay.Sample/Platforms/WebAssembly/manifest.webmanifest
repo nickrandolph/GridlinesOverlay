@@ -1,0 +1,10 @@
+{
+  "background_color": "#ffffff",
+  "description": "GridlinesOverlay.Sample",
+  "display": "standalone",
+  "name": "GridlinesOverlay.Sample",
+  "short_name": "GridlinesOverlay.Sample",
+  "start_url": "/index.html",
+  "theme_color": "#ffffff",
+  "scope": "/"
+}
