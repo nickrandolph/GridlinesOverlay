@@ -27,6 +27,12 @@
             FontSize="16"
             HorizontalAlignment="Center" />
           
+          <CheckBox x:Name="EnableShortcutCheckBox"
+                    Content="Enable Keyboard Shortcut (Ctrl+G)"
+                    IsChecked="True"
+                    HorizontalAlignment="Center"
+                    Margin="0,20,0,0" />
+          
           <StackPanel Spacing="10" Margin="0,20,0,0">
             <Button Content="Button 1" HorizontalAlignment="Left" />
             <Button Content="Button 2" HorizontalAlignment="Center" />
@@ -46,6 +52,7 @@
     </ScrollViewer>
     
     <!-- GridlinesOverlay - Always on top but non-interactive -->
-    <controls:GridlinesOverlay />
+    <controls:GridlinesOverlay x:Name="GridOverlay" 
+                               IsEnabled="{x:Bind EnableShortcutCheckBox.IsChecked, Mode=OneWay}" />
   </Grid>
 </Page>
