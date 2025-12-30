@@ -27,10 +27,17 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
-        
-    - name: Install workloads
+
+    - name: Select JDK 11
       run: |
-        dotnet workload install android wasm-tools
+          echo "##vso[task.setvariable variable=JAVA_HOME]$(JAVA_HOME_11_X64)"
+          echo "##vso[task.setvariable variable=JavaSdkDirectory]$(JAVA_HOME_11_X64)"
+
+    - name: Install uno-check
+      run: dotnet tool install --global uno.check
+        
+    - name: Run uno-check
+      run: uno-check check --ci --non-interactive --fix --skip xcode --skip gtk3 --skip vswin --skip vswinworkloads --skip unosdk --skip dotnetnewunotemplates --skip vsmac --skip openjdk --skip androidsdk --skip androidemulator
         
     - name: Restore dependencies
       run: dotnet restore GridlinesOverlay.sln
