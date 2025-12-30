@@ -17,7 +17,7 @@ permissions:
 jobs:
   build:
     name: Build and Test
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     
     steps:
     - name: Checkout code
@@ -27,11 +27,6 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
-
-    - name: Select JDK 11
-      run: |
-          echo "##vso[task.setvariable variable=JAVA_HOME]$(JAVA_HOME_11_X64)"
-          echo "##vso[task.setvariable variable=JavaSdkDirectory]$(JAVA_HOME_11_X64)"
 
     - name: Install uno-check
       run: dotnet tool install --global uno.check
