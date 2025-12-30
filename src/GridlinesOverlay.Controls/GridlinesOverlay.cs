@@ -99,6 +99,16 @@ public class GridlinesOverlay : Canvas
             new PropertyMetadata(null, OnGridlineStrokeDashArrayChanged));
 
     /// <summary>
+    /// Identifies the IsEnabled dependency property.
+    /// </summary>
+    public static readonly DependencyProperty IsEnabledProperty =
+        DependencyProperty.Register(
+            nameof(IsEnabled),
+            typeof(bool),
+            typeof(GridlinesOverlay),
+            new PropertyMetadata(true, OnIsEnabledChanged));
+
+    /// <summary>
     /// Gets or sets the default spacing used when the gridlines are made visible.
     /// Must be a positive value.
     /// </summary>
@@ -188,6 +198,16 @@ public class GridlinesOverlay : Canvas
         set => SetValue(GridlineStrokeDashArrayProperty, value);
     }
 
+    /// <summary>
+    /// Gets or sets a value indicating whether the keyboard shortcut is enabled.
+    /// When false, the Ctrl+G keyboard shortcut will not respond.
+    /// </summary>
+    public bool IsEnabled
+    {
+        get => (bool)GetValue(IsEnabledProperty);
+        set => SetValue(IsEnabledProperty, value);
+    }
+
     public GridlinesOverlay()
     {
         IsHitTestVisible = false;
@@ -198,11 +218,10 @@ public class GridlinesOverlay : Canvas
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
-        // Find the root element to attach keyboard handler
-        if (XamlRoot?.Content is UIElement rootElement)
+        // Only attach keyboard handlers if the control is enabled
+        if (IsEnabled)
         {
-            rootElement.KeyDown += OnRootKeyDown;
-            rootElement.KeyUp += OnRootKeyUp;
+            AttachKeyboardHandlers();
         }
         DrawGridlines();
     }
@@ -210,14 +229,52 @@ public class GridlinesOverlay : Canvas
     private void OnUnloaded(object sender, RoutedEventArgs e)
     {
         // Remove keyboard handler
+        DetachKeyboardHandlers();
+
+        // Reset spacing cycle mode so a new session starts from the initial state
+        _isInSpacingCycleMode = false;
+    }
+
+    private static void OnIsEnabledChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is GridlinesOverlay overlay)
+        {
+            if ((bool)e.NewValue)
+            {
+                // Control was enabled - attach keyboard handlers if loaded
+                if (overlay.IsLoaded)
+                {
+                    overlay.AttachKeyboardHandlers();
+                }
+            }
+            else
+            {
+                // Control was disabled - detach keyboard handlers
+                overlay.DetachKeyboardHandlers();
+            }
+        }
+    }
+
+    private void AttachKeyboardHandlers()
+    {
+        // Find the root element to attach keyboard handler
+        if (XamlRoot?.Content is UIElement rootElement)
+        {
+            rootElement.KeyDown -= OnRootKeyDown; // Remove first to avoid duplicate subscriptions
+            rootElement.KeyUp -= OnRootKeyUp;
+            rootElement.KeyDown += OnRootKeyDown;
+            rootElement.KeyUp += OnRootKeyUp;
+        }
+    }
+
+    private void DetachKeyboardHandlers()
+    {
+        // Remove keyboard handler
         if (XamlRoot?.Content is UIElement rootElement)
         {
             rootElement.KeyDown -= OnRootKeyDown;
             rootElement.KeyUp -= OnRootKeyUp;
         }
-
-        // Reset spacing cycle mode so a new session starts from the initial state
-        _isInSpacingCycleMode = false;
     }
 
     private void OnSizeChanged(object sender, SizeChangedEventArgs e)
@@ -227,6 +284,12 @@ public class GridlinesOverlay : Canvas
 
     private void OnRootKeyDown(object sender, KeyRoutedEventArgs e)
     {
+        // Only handle keyboard shortcuts if the control is enabled
+        if (!IsEnabled)
+        {
+            return;
+        }
+
         var isCtrlPressed = Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control).HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down);
 
         if (isCtrlPressed && e.Key == VirtualKey.G)
@@ -266,6 +329,12 @@ public class GridlinesOverlay : Canvas
 
     private void OnRootKeyUp(object sender, KeyRoutedEventArgs e)
     {
+        // Only handle keyboard shortcuts if the control is enabled
+        if (!IsEnabled)
+        {
+            return;
+        }
+
         // Reset spacing cycle mode when Ctrl is released
         // Check for generic Control and specific Left/Right Control keys to handle all keyboard configurations
         if (e.Key == VirtualKey.Control || e.Key == VirtualKey.LeftControl || e.Key == VirtualKey.RightControl)
