@@ -28,6 +28,12 @@ jobs:
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
         
+    - name: Install uno-check
+      run: dotnet tool install --global uno.check
+        
+    - name: Run uno-check
+      run: uno-check check --ci --non-interactive --fix --skip xcode --skip vswin --skip vsmac --skip androidemulator
+        
     - name: Install workloads
       run: |
         dotnet workload install android wasm-tools
