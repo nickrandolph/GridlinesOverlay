@@ -15,6 +15,7 @@ namespace GridlinesOverlay.Controls;
 public class GridlinesOverlay : SKXamlCanvas
 {
     private bool _isInSpacingCycleMode = false;
+    private float[]? _cachedDashIntervals = null;
 
     /// <summary>
     /// Identifies the DefaultSpacing dependency property.
@@ -375,6 +376,7 @@ public class GridlinesOverlay : SKXamlCanvas
     {
         if (d is GridlinesOverlay overlay)
         {
+            overlay._cachedDashIntervals = null; // Invalidate cache
             overlay.Invalidate();
         }
     }
@@ -484,24 +486,30 @@ public class GridlinesOverlay : SKXamlCanvas
             return;
         }
 
+        // Calculate alpha with proper clamping to prevent overflow
+        var alpha = (byte)Math.Min(255, GridlineColor.A * GridlineOpacity);
+
         // Create paint for drawing gridlines
         using var paint = new SKPaint
         {
-            Color = new SKColor(GridlineColor.R, GridlineColor.G, GridlineColor.B, (byte)(GridlineColor.A * GridlineOpacity)),
+            Color = new SKColor(GridlineColor.R, GridlineColor.G, GridlineColor.B, alpha),
             StrokeWidth = 1,
             IsAntialias = true,
             Style = SKPaintStyle.Stroke
         };
 
-        // Apply dash array if specified
+        // Apply dash array if specified (with caching)
         if (GridlineStrokeDashArray != null && GridlineStrokeDashArray.Count > 0)
         {
-            var intervals = new float[GridlineStrokeDashArray.Count];
-            for (int i = 0; i < GridlineStrokeDashArray.Count; i++)
+            if (_cachedDashIntervals == null)
             {
-                intervals[i] = (float)GridlineStrokeDashArray[i];
+                _cachedDashIntervals = new float[GridlineStrokeDashArray.Count];
+                for (int i = 0; i < GridlineStrokeDashArray.Count; i++)
+                {
+                    _cachedDashIntervals[i] = (float)GridlineStrokeDashArray[i];
+                }
             }
-            paint.PathEffect = SKPathEffect.CreateDash(intervals, 0);
+            paint.PathEffect = SKPathEffect.CreateDash(_cachedDashIntervals, 0);
         }
 
         // Draw vertical lines
