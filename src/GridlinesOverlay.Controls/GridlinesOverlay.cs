@@ -13,13 +13,49 @@ namespace GridlinesOverlay.Controls;
 /// </summary>
 public class GridlinesOverlay : Canvas
 {
-    private const double MinSpacing = 10;
-    private const double MaxSpacing = 100;
-    private const double SpacingIncrement = 10;
-
     private SolidColorBrush? _cachedBrush;
     private readonly List<Line> _linePool = new List<Line>();
     private int _linePoolIndex = 0;
+
+    /// <summary>
+    /// Identifies the DefaultSpacing dependency property.
+    /// </summary>
+    public static readonly DependencyProperty DefaultSpacingProperty =
+        DependencyProperty.Register(
+            nameof(DefaultSpacing),
+            typeof(double),
+            typeof(GridlinesOverlay),
+            new PropertyMetadata(8.0));
+
+    /// <summary>
+    /// Identifies the MinSpacing dependency property.
+    /// </summary>
+    public static readonly DependencyProperty MinSpacingProperty =
+        DependencyProperty.Register(
+            nameof(MinSpacing),
+            typeof(double?),
+            typeof(GridlinesOverlay),
+            new PropertyMetadata(null));
+
+    /// <summary>
+    /// Identifies the MaxSpacing dependency property.
+    /// </summary>
+    public static readonly DependencyProperty MaxSpacingProperty =
+        DependencyProperty.Register(
+            nameof(MaxSpacing),
+            typeof(double),
+            typeof(GridlinesOverlay),
+            new PropertyMetadata(64.0));
+
+    /// <summary>
+    /// Identifies the SpacingIncrement dependency property.
+    /// </summary>
+    public static readonly DependencyProperty SpacingIncrementProperty =
+        DependencyProperty.Register(
+            nameof(SpacingIncrement),
+            typeof(double),
+            typeof(GridlinesOverlay),
+            new PropertyMetadata(8.0));
 
     /// <summary>
     /// Identifies the GridSpacing dependency property.
@@ -29,7 +65,7 @@ public class GridlinesOverlay : Canvas
             nameof(GridSpacing),
             typeof(double),
             typeof(GridlinesOverlay),
-            new PropertyMetadata(MinSpacing, OnGridSpacingChanged));
+            new PropertyMetadata(8.0, OnGridSpacingChanged));
 
     /// <summary>
     /// Identifies the GridlineColor dependency property.
@@ -60,6 +96,67 @@ public class GridlinesOverlay : Canvas
             typeof(DoubleCollection),
             typeof(GridlinesOverlay),
             new PropertyMetadata(null, OnGridlineStrokeDashArrayChanged));
+
+    /// <summary>
+    /// Gets or sets the default spacing used when the gridlines are made visible.
+    /// Must be a positive value.
+    /// </summary>
+    public double DefaultSpacing
+    {
+        get => (double)GetValue(DefaultSpacingProperty);
+        set
+        {
+            // Validate that spacing is positive
+            if (value > 0)
+            {
+                SetValue(DefaultSpacingProperty, value);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Gets or sets the minimum spacing used when cycling through the gridline spacing.
+    /// If null, the DefaultSpacing value is used.
+    /// </summary>
+    public double? MinSpacing
+    {
+        get => (double?)GetValue(MinSpacingProperty);
+        set => SetValue(MinSpacingProperty, value);
+    }
+
+    /// <summary>
+    /// Gets or sets the maximum spacing that can be used when cycling through the gridline spacing.
+    /// Must be a positive value.
+    /// </summary>
+    public double MaxSpacing
+    {
+        get => (double)GetValue(MaxSpacingProperty);
+        set
+        {
+            // Validate that spacing is positive
+            if (value > 0)
+            {
+                SetValue(MaxSpacingProperty, value);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Gets or sets the increment used when cycling through the gridline spacing.
+    /// Must be a positive value.
+    /// </summary>
+    public double SpacingIncrement
+    {
+        get => (double)GetValue(SpacingIncrementProperty);
+        set
+        {
+            // Validate that spacing is positive
+            if (value > 0)
+            {
+                SetValue(SpacingIncrementProperty, value);
+            }
+        }
+    }
 
     /// <summary>
     /// Gets or sets the spacing between gridlines.
@@ -152,17 +249,18 @@ public class GridlinesOverlay : Canvas
             if (Visibility == Visibility.Collapsed)
             {
                 // Ctrl+G when hidden: Show with default spacing
-                GridSpacing = MinSpacing;
+                GridSpacing = DefaultSpacing;
                 Visibility = Visibility.Visible;
             }
             else
             {
                 // Ctrl+G when visible: Increase spacing by increment, cycling through min-to-max
+                var minSpacing = MinSpacing ?? DefaultSpacing;
                 var newSpacing = GridSpacing + SpacingIncrement;
                 if (newSpacing > MaxSpacing)
                 {
                     // Once max is reached, reset to minimum and continue
-                    GridSpacing = MinSpacing;
+                    GridSpacing = minSpacing;
                 }
                 else
                 {
@@ -188,10 +286,10 @@ public class GridlinesOverlay : Canvas
         {
             // Additional validation in case value is set via binding
             var newValue = (double)e.NewValue;
-            if (newValue <= 0 && newValue != MinSpacing)
+            if (newValue <= 0)
             {
-                // Avoid recursion by only setting if value is different
-                overlay.SetValue(GridSpacingProperty, MinSpacing);
+                // Avoid recursion by only setting if value is different from default
+                overlay.SetValue(GridSpacingProperty, overlay.DefaultSpacing);
                 return;
             }
             overlay.DrawGridlines();
