@@ -53,6 +53,6 @@
     
     <!-- GridlinesOverlay - Always on top but non-interactive -->
     <controls:GridlinesOverlay x:Name="GridOverlay" 
-                               IsEnabled="{x:Bind EnableShortcutCheckBox.IsChecked, Mode=OneWay}" />
+                               IsEnabled="{x:Bind EnableShortcutCheckBox.IsChecked, Mode=OneWay, FallbackValue=True, TargetNullValue=True}" />
   </Grid>
 </Page>
