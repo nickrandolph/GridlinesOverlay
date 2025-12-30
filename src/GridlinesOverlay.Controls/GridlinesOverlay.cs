@@ -215,6 +215,9 @@ public class GridlinesOverlay : Canvas
             rootElement.KeyDown -= OnRootKeyDown;
             rootElement.KeyUp -= OnRootKeyUp;
         }
+
+        // Reset spacing cycle mode so a new session starts from the initial state
+        _isInSpacingCycleMode = false;
     }
 
     private void OnSizeChanged(object sender, SizeChangedEventArgs e)
