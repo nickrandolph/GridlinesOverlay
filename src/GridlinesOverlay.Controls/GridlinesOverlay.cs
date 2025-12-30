@@ -177,8 +177,8 @@ public class GridlinesOverlay : Canvas
             {
                 // G (without Ctrl) when visible: Hide gridlines
                 Visibility = Visibility.Collapsed;
+                e.Handled = true;
             }
-            e.Handled = true;
         }
     }
 
