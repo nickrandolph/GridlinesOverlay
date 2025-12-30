@@ -185,8 +185,9 @@ public class GridlinesOverlay : Canvas
         {
             // Additional validation in case value is set via binding
             var newValue = (double)e.NewValue;
-            if (newValue <= 0)
+            if (newValue <= 0 && newValue != MinSpacing)
             {
+                // Avoid recursion by only setting if value is different
                 overlay.SetValue(GridSpacingProperty, MinSpacing);
                 return;
             }
@@ -212,8 +213,12 @@ public class GridlinesOverlay : Canvas
             if (newValue < 0.0 || newValue > 1.0)
             {
                 var clampedValue = Math.Max(0.0, Math.Min(1.0, newValue));
-                overlay.SetValue(GridlineOpacityProperty, clampedValue);
-                return;
+                // Avoid recursion by only setting if value is different
+                if (Math.Abs(clampedValue - newValue) > 0.0001)
+                {
+                    overlay.SetValue(GridlineOpacityProperty, clampedValue);
+                    return;
+                }
             }
             overlay.InvalidateBrush();
             overlay.DrawGridlines();
