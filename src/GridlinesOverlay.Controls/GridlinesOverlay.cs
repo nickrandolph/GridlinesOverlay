@@ -296,8 +296,19 @@ public class GridlinesOverlay : Canvas
             var newValue = (double)e.NewValue;
             if (newValue <= 0)
             {
-                // Avoid recursion by only setting if value is different from default
-                overlay.SetValue(GridSpacingProperty, overlay.DefaultSpacing);
+                // Determine a safe fallback spacing
+                var fallback = overlay.DefaultSpacing;
+                if (fallback <= 0)
+                {
+                    // Hardcoded safe fallback to avoid infinite recursion with invalid DefaultSpacing
+                    fallback = 10.0;
+                }
+
+                // Avoid recursion by only setting if value is meaningfully different from fallback
+                if (Math.Abs(fallback - newValue) > 0.0001)
+                {
+                    overlay.SetValue(GridSpacingProperty, fallback);
+                }
                 return;
             }
             overlay.DrawGridlines();
