@@ -256,15 +256,8 @@ public class GridlinesOverlay : Canvas
                 {
                     var minSpacing = MinSpacing ?? DefaultSpacing;
                     var newSpacing = GridSpacing + SpacingIncrement;
-                    if (newSpacing > MaxSpacing)
-                    {
-                        // Once max is reached, reset to minimum and continue
-                        GridSpacing = minSpacing;
-                    }
-                    else
-                    {
-                        GridSpacing = newSpacing;
-                    }
+                    // Once max is reached, reset to minimum and continue
+                    GridSpacing = newSpacing > MaxSpacing ? minSpacing : newSpacing;
                 }
             }
             e.Handled = true;
