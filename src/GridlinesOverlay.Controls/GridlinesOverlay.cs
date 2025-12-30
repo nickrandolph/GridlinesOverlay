@@ -149,31 +149,34 @@ public class GridlinesOverlay : Canvas
 
         if (isCtrlPressed && e.Key == VirtualKey.G)
         {
-            // Ctrl+G: Toggle visibility or show with minimum spacing if hidden
-            if (Visibility == Visibility.Visible)
+            if (Visibility == Visibility.Collapsed)
             {
-                Visibility = Visibility.Collapsed;
-            }
-            else
-            {
+                // Ctrl+G when hidden: Show with default spacing
                 GridSpacing = MinSpacing;
                 Visibility = Visibility.Visible;
             }
-            e.Handled = true;
-        }
-        else if (e.Key == VirtualKey.G && Visibility == Visibility.Visible && !isCtrlPressed)
-        {
-            // G (without Ctrl): Increase spacing
-            var newSpacing = GridSpacing + SpacingIncrement;
-            if (newSpacing > MaxSpacing)
-            {
-                // Hide when exceeding max spacing
-                Visibility = Visibility.Collapsed;
-                GridSpacing = MinSpacing;
-            }
             else
             {
-                GridSpacing = newSpacing;
+                // Ctrl+G when visible: Increase spacing by increment, cycling through min-to-max
+                var newSpacing = GridSpacing + SpacingIncrement;
+                if (newSpacing > MaxSpacing)
+                {
+                    // Once max is reached, reset to minimum and continue
+                    GridSpacing = MinSpacing;
+                }
+                else
+                {
+                    GridSpacing = newSpacing;
+                }
+            }
+            e.Handled = true;
+        }
+        else if (e.Key == VirtualKey.G && !isCtrlPressed)
+        {
+            if (Visibility == Visibility.Visible)
+            {
+                // G (without Ctrl) when visible: Hide gridlines
+                Visibility = Visibility.Collapsed;
             }
             e.Handled = true;
         }
