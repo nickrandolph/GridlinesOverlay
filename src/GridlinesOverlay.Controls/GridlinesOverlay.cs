@@ -121,7 +121,15 @@ public class GridlinesOverlay : Canvas
     public double? MinSpacing
     {
         get => (double?)GetValue(MinSpacingProperty);
-        set => SetValue(MinSpacingProperty, value);
+        set
+        {
+            // Validate that spacing is positive when not null
+            if (value.HasValue && value.Value <= 0)
+            {
+                return; // Silently ignore invalid values
+            }
+            SetValue(MinSpacingProperty, value);
+        }
     }
 
     /// <summary>
