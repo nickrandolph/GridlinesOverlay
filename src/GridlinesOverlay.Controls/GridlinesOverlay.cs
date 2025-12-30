@@ -296,7 +296,7 @@ public class GridlinesOverlay : SKCanvasElement
 
         if (isCtrlPressed && e.Key == VirtualKey.G)
         {
-            if (!_isInSpacingCycleMode)
+            if (!_isInSpacingCycleMode || Visibility == Visibility.Collapsed)
             {
                 // First Ctrl+G press: toggle visibility
                 if (Visibility == Visibility.Collapsed)
