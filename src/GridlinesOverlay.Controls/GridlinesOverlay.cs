@@ -270,8 +270,9 @@ public class GridlinesOverlay : Canvas
 
     private void OnRootKeyUp(object sender, KeyRoutedEventArgs e)
     {
-        // Reset spacing cycle mode when Ctrl or G is released
-        if (e.Key == VirtualKey.Control || e.Key == VirtualKey.G)
+        // Reset spacing cycle mode when Ctrl is released
+        // Check for both generic Control and specific Left/Right Control keys to handle all cases
+        if (e.Key == VirtualKey.Control || e.Key == VirtualKey.LeftControl || e.Key == VirtualKey.RightControl)
         {
             _isInSpacingCycleMode = false;
         }
