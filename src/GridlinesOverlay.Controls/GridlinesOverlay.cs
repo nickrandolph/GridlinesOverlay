@@ -331,8 +331,12 @@ public class GridlinesOverlay : Canvas
             var newValue = (double)e.NewValue;
             if (double.IsNaN(newValue) || double.IsInfinity(newValue) || newValue <= 0.0)
             {
-                // Revert to default value
-                overlay.SetValue(DefaultSpacingProperty, 8.0);
+                // Revert to default value only if different to avoid recursion
+                const double defaultValue = 8.0;
+                if (Math.Abs(newValue - defaultValue) > 0.0001)
+                {
+                    overlay.SetValue(DefaultSpacingProperty, defaultValue);
+                }
             }
         }
     }
@@ -346,7 +350,7 @@ public class GridlinesOverlay : Canvas
             {
                 if (double.IsNaN(newValue.Value) || double.IsInfinity(newValue.Value) || newValue.Value <= 0.0)
                 {
-                    // Revert to null (use DefaultSpacing)
+                    // Revert to null (use DefaultSpacing) only if different to avoid recursion
                     overlay.SetValue(MinSpacingProperty, null);
                 }
             }
@@ -360,8 +364,12 @@ public class GridlinesOverlay : Canvas
             var newValue = (double)e.NewValue;
             if (double.IsNaN(newValue) || double.IsInfinity(newValue) || newValue <= 0.0)
             {
-                // Revert to default value
-                overlay.SetValue(MaxSpacingProperty, 64.0);
+                // Revert to default value only if different to avoid recursion
+                const double defaultValue = 64.0;
+                if (Math.Abs(newValue - defaultValue) > 0.0001)
+                {
+                    overlay.SetValue(MaxSpacingProperty, defaultValue);
+                }
             }
         }
     }
@@ -373,8 +381,12 @@ public class GridlinesOverlay : Canvas
             var newValue = (double)e.NewValue;
             if (double.IsNaN(newValue) || double.IsInfinity(newValue) || newValue <= 0.0)
             {
-                // Revert to default value
-                overlay.SetValue(SpacingIncrementProperty, 8.0);
+                // Revert to default value only if different to avoid recursion
+                const double defaultValue = 8.0;
+                if (Math.Abs(newValue - defaultValue) > 0.0001)
+                {
+                    overlay.SetValue(SpacingIncrementProperty, defaultValue);
+                }
             }
         }
     }
