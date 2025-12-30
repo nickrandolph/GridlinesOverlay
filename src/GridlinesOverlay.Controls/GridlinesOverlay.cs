@@ -50,12 +50,23 @@ public class GridlinesOverlay : Canvas
     /// <summary>
     /// Identifies the SpacingIncrement dependency property.
     /// </summary>
+    private static bool ValidateSpacingIncrement(object value)
+    {
+        if (value is double d)
+        {
+            return !double.IsNaN(d) && !double.IsInfinity(d) && d > 0.0;
+        }
+
+        return false;
+    }
+
     public static readonly DependencyProperty SpacingIncrementProperty =
         DependencyProperty.Register(
             nameof(SpacingIncrement),
             typeof(double),
             typeof(GridlinesOverlay),
-            new PropertyMetadata(8.0));
+            new PropertyMetadata(8.0),
+            ValidateSpacingIncrement);
 
     /// <summary>
     /// Identifies the GridSpacing dependency property.
