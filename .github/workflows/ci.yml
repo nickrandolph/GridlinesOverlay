@@ -28,10 +28,6 @@ jobs:
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
 
-    - name: Install workloads
-      run: |
-        dotnet workload install ios maui android wasm-tools
-
     - name: Install uno-check
       run: dotnet tool install --global uno.check
         
