@@ -8,8 +8,8 @@ A semi-transparent overlay control for Uno Platform and WinUI that displays grid
 - 🎨 Configurable color (default: Red)
 - 🖌️ Configurable dash pattern (default: solid line)
 - 🔍 Configurable opacity (default: 50%)
-- ⌨️ **Ctrl+G**: Show/cycle spacing levels (8px to 64px in 8px increments)
-- ⌨️ **G**: Hide gridlines
+- ⌨️ **Ctrl+G**: Toggle gridlines visibility
+- ⌨️ **Ctrl+G repeatedly** (while holding Ctrl): Cycle spacing levels (8px to 64px in 8px increments)
 - 🔝 Always on top but non-interactive (won't block user interactions)
 
 ## Installation
@@ -74,9 +74,9 @@ You can also customize the spacing behavior when cycling with Ctrl+G:
 
 ### Keyboard Shortcuts
 
-- **Ctrl+G** (when hidden): Show gridlines with default spacing (8px)
-- **Ctrl+G** (when visible, repeatedly with Ctrl held): Cycle spacing from 8px → 16px → 24px → ... → 64px → 8px → ...
-- **G** (when visible): Hide gridlines
+- **Ctrl+G**: Toggle gridlines visibility (show with default spacing if hidden, hide if visible)
+- **Ctrl+G** repeatedly (while holding Ctrl): Cycle spacing from 8px → 16px → 24px → ... → 64px → 8px → ...
+  - First press toggles visibility, subsequent G presses while Ctrl is held cycle the spacing
 
 ## Building from Source
 

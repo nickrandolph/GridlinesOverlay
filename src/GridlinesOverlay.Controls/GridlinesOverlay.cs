@@ -16,6 +16,7 @@ public class GridlinesOverlay : Canvas
     private SolidColorBrush? _cachedBrush;
     private readonly List<Line> _linePool = new List<Line>();
     private int _linePoolIndex = 0;
+    private bool _isInSpacingCycleMode = false;
 
     /// <summary>
     /// Identifies the DefaultSpacing dependency property.
@@ -201,6 +202,7 @@ public class GridlinesOverlay : Canvas
         if (XamlRoot?.Content is UIElement rootElement)
         {
             rootElement.KeyDown += OnRootKeyDown;
+            rootElement.KeyUp += OnRootKeyUp;
         }
         DrawGridlines();
     }
@@ -211,7 +213,11 @@ public class GridlinesOverlay : Canvas
         if (XamlRoot?.Content is UIElement rootElement)
         {
             rootElement.KeyDown -= OnRootKeyDown;
+            rootElement.KeyUp -= OnRootKeyUp;
         }
+
+        // Reset spacing cycle mode so a new session starts from the initial state
+        _isInSpacingCycleMode = false;
     }
 
     private void OnSizeChanged(object sender, SizeChangedEventArgs e)
@@ -225,37 +231,46 @@ public class GridlinesOverlay : Canvas
 
         if (isCtrlPressed && e.Key == VirtualKey.G)
         {
-            if (Visibility == Visibility.Collapsed)
+            if (!_isInSpacingCycleMode)
             {
-                // Ctrl+G when hidden: Show with default spacing
-                GridSpacing = DefaultSpacing;
-                Visibility = Visibility.Visible;
-            }
-            else
-            {
-                // Ctrl+G when visible: Increase spacing by increment, cycling through min-to-max
-                var minSpacing = MinSpacing ?? DefaultSpacing;
-                var newSpacing = GridSpacing + SpacingIncrement;
-                if (newSpacing > MaxSpacing)
+                // First Ctrl+G press: toggle visibility
+                if (Visibility == Visibility.Collapsed)
                 {
-                    // Once max is reached, reset to minimum and continue
-                    GridSpacing = minSpacing;
+                    // Show with default spacing
+                    GridSpacing = DefaultSpacing;
+                    Visibility = Visibility.Visible;
                 }
                 else
                 {
-                    GridSpacing = newSpacing;
+                    // Hide gridlines
+                    Visibility = Visibility.Collapsed;
+                }
+                // Enter spacing cycle mode for subsequent G presses
+                _isInSpacingCycleMode = true;
+            }
+            else
+            {
+                // Subsequent G presses while Ctrl is held: cycle spacing
+                // Only cycle if gridlines are visible
+                if (Visibility == Visibility.Visible)
+                {
+                    var minSpacing = MinSpacing ?? DefaultSpacing;
+                    var newSpacing = GridSpacing + SpacingIncrement;
+                    // Once max is reached, reset to minimum and continue
+                    GridSpacing = newSpacing > MaxSpacing ? minSpacing : newSpacing;
                 }
             }
             e.Handled = true;
         }
-        else if (e.Key == VirtualKey.G && !isCtrlPressed)
+    }
+
+    private void OnRootKeyUp(object sender, KeyRoutedEventArgs e)
+    {
+        // Reset spacing cycle mode when Ctrl is released
+        // Check for generic Control and specific Left/Right Control keys to handle all keyboard configurations
+        if (e.Key == VirtualKey.Control || e.Key == VirtualKey.LeftControl || e.Key == VirtualKey.RightControl)
         {
-            if (Visibility == Visibility.Visible)
-            {
-                // G (without Ctrl) when visible: Hide gridlines
-                Visibility = Visibility.Collapsed;
-            }
-            e.Handled = true;
+            _isInSpacingCycleMode = false;
         }
     }
 
