@@ -25,7 +25,7 @@ public class GridlinesOverlay : Canvas
             nameof(DefaultSpacing),
             typeof(double),
             typeof(GridlinesOverlay),
-            new PropertyMetadata(8.0));
+            new PropertyMetadata(8.0, OnDefaultSpacingChanged));
 
     /// <summary>
     /// Identifies the MinSpacing dependency property.
@@ -35,7 +35,7 @@ public class GridlinesOverlay : Canvas
             nameof(MinSpacing),
             typeof(double?),
             typeof(GridlinesOverlay),
-            new PropertyMetadata(null));
+            new PropertyMetadata(null, OnMinSpacingChanged));
 
     /// <summary>
     /// Identifies the MaxSpacing dependency property.
@@ -45,28 +45,17 @@ public class GridlinesOverlay : Canvas
             nameof(MaxSpacing),
             typeof(double),
             typeof(GridlinesOverlay),
-            new PropertyMetadata(64.0));
+            new PropertyMetadata(64.0, OnMaxSpacingChanged));
 
     /// <summary>
     /// Identifies the SpacingIncrement dependency property.
     /// </summary>
-    private static bool ValidateSpacingIncrement(object value)
-    {
-        if (value is double d)
-        {
-            return !double.IsNaN(d) && !double.IsInfinity(d) && d > 0.0;
-        }
-
-        return false;
-    }
-
     public static readonly DependencyProperty SpacingIncrementProperty =
         DependencyProperty.Register(
             nameof(SpacingIncrement),
             typeof(double),
             typeof(GridlinesOverlay),
-            new PropertyMetadata(8.0),
-            ValidateSpacingIncrement);
+            new PropertyMetadata(8.0, OnSpacingIncrementChanged));
 
     /// <summary>
     /// Identifies the GridSpacing dependency property.
@@ -115,14 +104,7 @@ public class GridlinesOverlay : Canvas
     public double DefaultSpacing
     {
         get => (double)GetValue(DefaultSpacingProperty);
-        set
-        {
-            // Validate that spacing is positive
-            if (value > 0)
-            {
-                SetValue(DefaultSpacingProperty, value);
-            }
-        }
+        set => SetValue(DefaultSpacingProperty, value);
     }
 
     /// <summary>
@@ -132,15 +114,7 @@ public class GridlinesOverlay : Canvas
     public double? MinSpacing
     {
         get => (double?)GetValue(MinSpacingProperty);
-        set
-        {
-            // Validate that spacing is positive when not null
-            if (value.HasValue && value.Value <= 0)
-            {
-                return; // Silently ignore invalid values
-            }
-            SetValue(MinSpacingProperty, value);
-        }
+        set => SetValue(MinSpacingProperty, value);
     }
 
     /// <summary>
@@ -150,14 +124,7 @@ public class GridlinesOverlay : Canvas
     public double MaxSpacing
     {
         get => (double)GetValue(MaxSpacingProperty);
-        set
-        {
-            // Validate that spacing is positive
-            if (value > 0)
-            {
-                SetValue(MaxSpacingProperty, value);
-            }
-        }
+        set => SetValue(MaxSpacingProperty, value);
     }
 
     /// <summary>
@@ -167,14 +134,7 @@ public class GridlinesOverlay : Canvas
     public double SpacingIncrement
     {
         get => (double)GetValue(SpacingIncrementProperty);
-        set
-        {
-            // Validate that spacing is positive
-            if (value > 0)
-            {
-                SetValue(SpacingIncrementProperty, value);
-            }
-        }
+        set => SetValue(SpacingIncrementProperty, value);
     }
 
     /// <summary>
@@ -361,6 +321,61 @@ public class GridlinesOverlay : Canvas
         if (d is GridlinesOverlay overlay)
         {
             overlay.DrawGridlines();
+        }
+    }
+
+    private static void OnDefaultSpacingChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is GridlinesOverlay overlay)
+        {
+            var newValue = (double)e.NewValue;
+            if (double.IsNaN(newValue) || double.IsInfinity(newValue) || newValue <= 0.0)
+            {
+                // Revert to default value
+                overlay.SetValue(DefaultSpacingProperty, 8.0);
+            }
+        }
+    }
+
+    private static void OnMinSpacingChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is GridlinesOverlay overlay)
+        {
+            var newValue = e.NewValue as double?;
+            if (newValue.HasValue)
+            {
+                if (double.IsNaN(newValue.Value) || double.IsInfinity(newValue.Value) || newValue.Value <= 0.0)
+                {
+                    // Revert to null (use DefaultSpacing)
+                    overlay.SetValue(MinSpacingProperty, null);
+                }
+            }
+        }
+    }
+
+    private static void OnMaxSpacingChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is GridlinesOverlay overlay)
+        {
+            var newValue = (double)e.NewValue;
+            if (double.IsNaN(newValue) || double.IsInfinity(newValue) || newValue <= 0.0)
+            {
+                // Revert to default value
+                overlay.SetValue(MaxSpacingProperty, 64.0);
+            }
+        }
+    }
+
+    private static void OnSpacingIncrementChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is GridlinesOverlay overlay)
+        {
+            var newValue = (double)e.NewValue;
+            if (double.IsNaN(newValue) || double.IsInfinity(newValue) || newValue <= 0.0)
+            {
+                // Revert to default value
+                overlay.SetValue(SpacingIncrementProperty, 8.0);
+            }
         }
     }
 
