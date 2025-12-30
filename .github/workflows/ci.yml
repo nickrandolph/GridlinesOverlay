@@ -30,8 +30,8 @@ jobs:
 
     - name: Select JDK 11
       run: |
-          echo "##vso[task.setvariable variable=JAVA_HOME]$(JAVA_HOME_17_X64)"
-          echo "##vso[task.setvariable variable=JavaSdkDirectory]$(JAVA_HOME_17_X64)"
+          echo "##vso[task.setvariable variable=JAVA_HOME]$(JAVA_HOME_11_X64)"
+          echo "##vso[task.setvariable variable=JavaSdkDirectory]$(JAVA_HOME_11_X64)"
 
     - name: Install uno-check
       run: dotnet tool install --global uno.check
