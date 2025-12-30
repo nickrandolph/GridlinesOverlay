@@ -8,7 +8,7 @@ A semi-transparent overlay control for Uno Platform and WinUI that displays grid
 - 🎨 Configurable color (default: Red)
 - 🖌️ Configurable dash pattern (default: solid line)
 - 🔍 Configurable opacity (default: 50%)
-- ⌨️ **Ctrl+G**: Show/cycle spacing levels (10px to 100px in 10px increments)
+- ⌨️ **Ctrl+G**: Show/cycle spacing levels (8px to 64px in 8px increments)
 - ⌨️ **G**: Hide gridlines
 - 🔝 Always on top but non-interactive (won't block user interactions)
 
@@ -56,10 +56,26 @@ For dashed lines:
 </controls:GridlinesOverlay>
 ```
 
+You can also customize the spacing behavior when cycling with Ctrl+G:
+
+```xaml
+<controls:GridlinesOverlay 
+    DefaultSpacing="10"
+    MinSpacing="5"
+    MaxSpacing="100"
+    SpacingIncrement="5" />
+```
+
+**Spacing Properties:**
+- `DefaultSpacing`: The default spacing used when gridlines are made visible (default: 8)
+- `MinSpacing`: The minimum spacing used when cycling. If null, DefaultSpacing is used (default: null)
+- `MaxSpacing`: The maximum spacing when cycling (default: 64)
+- `SpacingIncrement`: The increment used when cycling through spacing values (default: 8)
+
 ### Keyboard Shortcuts
 
-- **Ctrl+G** (when hidden): Show gridlines with default spacing (10px)
-- **Ctrl+G** (when visible, repeatedly with Ctrl held): Cycle spacing from 10px → 20px → 30px → ... → 100px → 10px → ...
+- **Ctrl+G** (when hidden): Show gridlines with default spacing (8px)
+- **Ctrl+G** (when visible, repeatedly with Ctrl held): Cycle spacing from 8px → 16px → 24px → ... → 64px → 8px → ...
 - **G** (when visible): Hide gridlines
 
 ## Building from Source
