@@ -17,6 +17,10 @@ public class GridlinesOverlay : Canvas
     private const double MaxSpacing = 100;
     private const double SpacingIncrement = 10;
 
+    private SolidColorBrush? _cachedBrush;
+    private readonly List<Line> _linePool = new List<Line>();
+    private int _linePoolIndex = 0;
+
     /// <summary>
     /// Identifies the GridSpacing dependency property.
     /// </summary>
@@ -59,11 +63,19 @@ public class GridlinesOverlay : Canvas
 
     /// <summary>
     /// Gets or sets the spacing between gridlines.
+    /// Must be a positive value.
     /// </summary>
     public double GridSpacing
     {
         get => (double)GetValue(GridSpacingProperty);
-        set => SetValue(GridSpacingProperty, value);
+        set
+        {
+            // Validate that spacing is positive
+            if (value > 0)
+            {
+                SetValue(GridSpacingProperty, value);
+            }
+        }
     }
 
     /// <summary>
@@ -77,11 +89,17 @@ public class GridlinesOverlay : Canvas
 
     /// <summary>
     /// Gets or sets the opacity of the gridlines.
+    /// Must be between 0.0 and 1.0.
     /// </summary>
     public double GridlineOpacity
     {
         get => (double)GetValue(GridlineOpacityProperty);
-        set => SetValue(GridlineOpacityProperty, value);
+        set
+        {
+            // Clamp opacity between 0.0 and 1.0
+            var clampedValue = Math.Max(0.0, Math.Min(1.0, value));
+            SetValue(GridlineOpacityProperty, clampedValue);
+        }
     }
 
     /// <summary>
@@ -131,13 +149,21 @@ public class GridlinesOverlay : Canvas
 
         if (isCtrlPressed && e.Key == VirtualKey.G)
         {
-            // Ctrl+G: Toggle visibility
-            Visibility = Visibility == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
+            // Ctrl+G: Toggle visibility or show with minimum spacing if hidden
+            if (Visibility == Visibility.Visible)
+            {
+                Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                GridSpacing = MinSpacing;
+                Visibility = Visibility.Visible;
+            }
             e.Handled = true;
         }
-        else if (e.Key == VirtualKey.G && Visibility == Visibility.Visible)
+        else if (e.Key == VirtualKey.G && Visibility == Visibility.Visible && !isCtrlPressed)
         {
-            // G: Increase spacing
+            // G (without Ctrl): Increase spacing
             var newSpacing = GridSpacing + SpacingIncrement;
             if (newSpacing > MaxSpacing)
             {
@@ -157,6 +183,13 @@ public class GridlinesOverlay : Canvas
     {
         if (d is GridlinesOverlay overlay)
         {
+            // Additional validation in case value is set via binding
+            var newValue = (double)e.NewValue;
+            if (newValue <= 0)
+            {
+                overlay.SetValue(GridSpacingProperty, MinSpacing);
+                return;
+            }
             overlay.DrawGridlines();
         }
     }
@@ -165,6 +198,7 @@ public class GridlinesOverlay : Canvas
     {
         if (d is GridlinesOverlay overlay)
         {
+            overlay.InvalidateBrush();
             overlay.DrawGridlines();
         }
     }
@@ -173,6 +207,15 @@ public class GridlinesOverlay : Canvas
     {
         if (d is GridlinesOverlay overlay)
         {
+            // Additional validation in case value is set via binding
+            var newValue = (double)e.NewValue;
+            if (newValue < 0.0 || newValue > 1.0)
+            {
+                var clampedValue = Math.Max(0.0, Math.Min(1.0, newValue));
+                overlay.SetValue(GridlineOpacityProperty, clampedValue);
+                return;
+            }
+            overlay.InvalidateBrush();
             overlay.DrawGridlines();
         }
     }
@@ -185,8 +228,45 @@ public class GridlinesOverlay : Canvas
         }
     }
 
+    private void InvalidateBrush()
+    {
+        _cachedBrush = null;
+    }
+
+    private SolidColorBrush GetOrCreateBrush()
+    {
+        if (_cachedBrush == null)
+        {
+            _cachedBrush = new SolidColorBrush(GridlineColor)
+            {
+                Opacity = GridlineOpacity
+            };
+        }
+        return _cachedBrush;
+    }
+
+    private Line GetOrCreateLine()
+    {
+        if (_linePoolIndex < _linePool.Count)
+        {
+            return _linePool[_linePoolIndex++];
+        }
+
+        var line = new Line
+        {
+            StrokeThickness = 1
+        };
+        _linePool.Add(line);
+        _linePoolIndex++;
+        return line;
+    }
+
     private void DrawGridlines()
     {
+        // Reset line pool index to reuse existing lines
+        _linePoolIndex = 0;
+
+        // Clear children but keep lines in the pool
         Children.Clear();
 
         if (ActualWidth <= 0 || ActualHeight <= 0 || GridSpacing <= 0)
@@ -194,27 +274,25 @@ public class GridlinesOverlay : Canvas
             return;
         }
 
-        var brush = new SolidColorBrush(GridlineColor)
-        {
-            Opacity = GridlineOpacity
-        };
+        var brush = GetOrCreateBrush();
 
         // Draw vertical lines
         for (double x = GridSpacing; x < ActualWidth; x += GridSpacing)
         {
-            var line = new Line
-            {
-                X1 = x,
-                Y1 = 0,
-                X2 = x,
-                Y2 = ActualHeight,
-                Stroke = brush,
-                StrokeThickness = 1
-            };
+            var line = GetOrCreateLine();
+            line.X1 = x;
+            line.Y1 = 0;
+            line.X2 = x;
+            line.Y2 = ActualHeight;
+            line.Stroke = brush;
 
             if (GridlineStrokeDashArray != null && GridlineStrokeDashArray.Count > 0)
             {
                 line.StrokeDashArray = GridlineStrokeDashArray;
+            }
+            else
+            {
+                line.StrokeDashArray = null;
             }
 
             Children.Add(line);
@@ -223,19 +301,20 @@ public class GridlinesOverlay : Canvas
         // Draw horizontal lines
         for (double y = GridSpacing; y < ActualHeight; y += GridSpacing)
         {
-            var line = new Line
-            {
-                X1 = 0,
-                Y1 = y,
-                X2 = ActualWidth,
-                Y2 = y,
-                Stroke = brush,
-                StrokeThickness = 1
-            };
+            var line = GetOrCreateLine();
+            line.X1 = 0;
+            line.Y1 = y;
+            line.X2 = ActualWidth;
+            line.Y2 = y;
+            line.Stroke = brush;
 
             if (GridlineStrokeDashArray != null && GridlineStrokeDashArray.Count > 0)
             {
                 line.StrokeDashArray = GridlineStrokeDashArray;
+            }
+            else
+            {
+                line.StrokeDashArray = null;
             }
 
             Children.Add(line);
