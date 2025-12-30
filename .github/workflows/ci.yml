@@ -1,0 +1,77 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  CONFIGURATION: Release
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build and Test
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Install uno-check
+      run: dotnet tool install --global uno.check
+        
+    - name: Run uno-check
+      run: uno-check check --ci --non-interactive --fix --skip xcode --skip gtk3 --skip vswin --skip vswinworkloads --skip unosdk --skip dotnetnewunotemplates --skip vsmac --skip openjdk --skip androidsdk --skip androidemulator
+        
+    - name: Restore dependencies
+      run: dotnet restore GridlinesOverlay.sln
+      
+    - name: Build library
+      run: dotnet build src/GridlinesOverlay.Controls/GridlinesOverlay.Controls.csproj -c ${{ env.CONFIGURATION }} --no-restore
+      
+    - name: Build sample app (desktop only)
+      run: dotnet build samples/GridlinesOverlay.Sample/GridlinesOverlay.Sample/GridlinesOverlay.Sample.csproj -c ${{ env.CONFIGURATION }} -f net10.0-desktop --no-restore
+      
+    - name: Pack NuGet package
+      run: dotnet pack src/GridlinesOverlay.Controls/GridlinesOverlay.Controls.csproj -c ${{ env.CONFIGURATION }} --no-build -o ./artifacts
+      
+    - name: Upload NuGet package
+      uses: actions/upload-artifact@v4
+      with:
+        name: nuget-package
+        path: ./artifacts/*.nupkg
+        
+  publish:
+    name: Publish to NuGet
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+    
+    steps:
+    - name: Download NuGet package
+      uses: actions/download-artifact@v4
+      with:
+        name: nuget-package
+        path: ./artifacts
+        
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+        
+    - name: Publish to NuGet
+      run: dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+      continue-on-error: true
