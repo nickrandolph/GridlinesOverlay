@@ -260,7 +260,8 @@ public class GridlinesOverlay : Canvas
         // Find the root element to attach keyboard handler
         if (XamlRoot?.Content is UIElement rootElement)
         {
-            rootElement.KeyDown -= OnRootKeyDown; // Remove first to avoid duplicate subscriptions
+            // Ensure no duplicate subscriptions by removing existing handlers first
+            rootElement.KeyDown -= OnRootKeyDown;
             rootElement.KeyUp -= OnRootKeyUp;
             rootElement.KeyDown += OnRootKeyDown;
             rootElement.KeyUp += OnRootKeyUp;
