@@ -18,12 +18,12 @@
             HorizontalAlignment="Center" />
           
           <TextBlock
-            Text="Press Ctrl+G to toggle gridlines visibility"
+            Text="Press Ctrl+G to show/cycle gridlines spacing (8 to 64)"
             FontSize="16"
             HorizontalAlignment="Center" />
           
           <TextBlock
-            Text="Press G to increase spacing (cycles from 10 to 100)"
+            Text="Press G to hide gridlines"
             FontSize="16"
             HorizontalAlignment="Center" />
           
