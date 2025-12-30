@@ -32,7 +32,7 @@ jobs:
       run: dotnet tool install --global uno.check
         
     - name: Run uno-check
-      run: uno-check check --ci --non-interactive --fix --skip xcode --skip vswin --skip vsmac --skip androidemulator
+      run: uno-check check --ci --non-interactive --fix --skip xcode --skip gtk3 --skip vswin --skip vswinworkloads --skip unosdk --skip dotnetnewunotemplates --skip vsmac --skip androidsdk --skip androidemulator
         
     - name: Install workloads
       run: |
