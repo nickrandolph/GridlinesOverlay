@@ -3,7 +3,8 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Shapes;
+using SkiaSharp;
+using SkiaSharp.Views.Windows;
 using Windows.System;
 
 namespace GridlinesOverlay.Controls;
@@ -11,11 +12,8 @@ namespace GridlinesOverlay.Controls;
 /// <summary>
 /// A semi-transparent overlay control that displays gridlines for alignment purposes.
 /// </summary>
-public class GridlinesOverlay : Canvas
+public class GridlinesOverlay : SKXamlCanvas
 {
-    private SolidColorBrush? _cachedBrush;
-    private readonly List<Line> _linePool = new List<Line>();
-    private int _linePoolIndex = 0;
     private bool _isInSpacingCycleMode = false;
 
     /// <summary>
@@ -214,6 +212,7 @@ public class GridlinesOverlay : Canvas
         Loaded += OnLoaded;
         Unloaded += OnUnloaded;
         SizeChanged += OnSizeChanged;
+        PaintSurface += OnPaintSurface;
     }
 
     private void OnLoaded(object sender, RoutedEventArgs e)
@@ -223,7 +222,7 @@ public class GridlinesOverlay : Canvas
         {
             AttachKeyboardHandlers();
         }
-        DrawGridlines();
+        Invalidate();
     }
 
     private void OnUnloaded(object sender, RoutedEventArgs e)
@@ -281,7 +280,7 @@ public class GridlinesOverlay : Canvas
 
     private void OnSizeChanged(object sender, SizeChangedEventArgs e)
     {
-        DrawGridlines();
+        Invalidate();
     }
 
     private void OnRootKeyDown(object sender, KeyRoutedEventArgs e)
@@ -368,7 +367,7 @@ public class GridlinesOverlay : Canvas
                 }
                 return;
             }
-            overlay.DrawGridlines();
+            overlay.Invalidate();
         }
     }
 
@@ -376,8 +375,7 @@ public class GridlinesOverlay : Canvas
     {
         if (d is GridlinesOverlay overlay)
         {
-            overlay.InvalidateBrush();
-            overlay.DrawGridlines();
+            overlay.Invalidate();
         }
     }
 
@@ -397,8 +395,7 @@ public class GridlinesOverlay : Canvas
                     return;
                 }
             }
-            overlay.InvalidateBrush();
-            overlay.DrawGridlines();
+            overlay.Invalidate();
         }
     }
 
@@ -406,7 +403,7 @@ public class GridlinesOverlay : Canvas
     {
         if (d is GridlinesOverlay overlay)
         {
-            overlay.DrawGridlines();
+            overlay.Invalidate();
         }
     }
 
@@ -477,96 +474,46 @@ public class GridlinesOverlay : Canvas
         }
     }
 
-    private void InvalidateBrush()
+    private void OnPaintSurface(object? sender, SKPaintSurfaceEventArgs e)
     {
-        _cachedBrush = null;
-    }
-
-    private SolidColorBrush GetOrCreateBrush()
-    {
-        if (_cachedBrush == null)
-        {
-            _cachedBrush = new SolidColorBrush(GridlineColor)
-            {
-                Opacity = GridlineOpacity
-            };
-        }
-        return _cachedBrush;
-    }
-
-    private Line GetOrCreateLine()
-    {
-        if (_linePoolIndex < _linePool.Count)
-        {
-            return _linePool[_linePoolIndex++];
-        }
-
-        var line = new Line
-        {
-            StrokeThickness = 1
-        };
-        _linePool.Add(line);
-        _linePoolIndex++;
-        return line;
-    }
-
-    private void DrawGridlines()
-    {
-        // Reset line pool index to reuse existing lines
-        _linePoolIndex = 0;
-
-        // Clear children but keep lines in the pool
-        Children.Clear();
+        var canvas = e.Surface.Canvas;
+        canvas.Clear(SKColors.Transparent);
 
         if (ActualWidth <= 0 || ActualHeight <= 0 || GridSpacing <= 0)
         {
             return;
         }
 
-        var brush = GetOrCreateBrush();
+        // Create paint for drawing gridlines
+        using var paint = new SKPaint
+        {
+            Color = new SKColor(GridlineColor.R, GridlineColor.G, GridlineColor.B, (byte)(GridlineColor.A * GridlineOpacity)),
+            StrokeWidth = 1,
+            IsAntialias = true,
+            Style = SKPaintStyle.Stroke
+        };
+
+        // Apply dash array if specified
+        if (GridlineStrokeDashArray != null && GridlineStrokeDashArray.Count > 0)
+        {
+            var intervals = new float[GridlineStrokeDashArray.Count];
+            for (int i = 0; i < GridlineStrokeDashArray.Count; i++)
+            {
+                intervals[i] = (float)GridlineStrokeDashArray[i];
+            }
+            paint.PathEffect = SKPathEffect.CreateDash(intervals, 0);
+        }
 
         // Draw vertical lines
         for (double x = GridSpacing; x < ActualWidth; x += GridSpacing)
         {
-            var line = GetOrCreateLine();
-            line.X1 = x;
-            line.Y1 = 0;
-            line.X2 = x;
-            line.Y2 = ActualHeight;
-            line.Stroke = brush;
-
-            if (GridlineStrokeDashArray != null && GridlineStrokeDashArray.Count > 0)
-            {
-                line.StrokeDashArray = GridlineStrokeDashArray;
-            }
-            else
-            {
-                line.StrokeDashArray = null;
-            }
-
-            Children.Add(line);
+            canvas.DrawLine((float)x, 0, (float)x, (float)ActualHeight, paint);
         }
 
         // Draw horizontal lines
         for (double y = GridSpacing; y < ActualHeight; y += GridSpacing)
         {
-            var line = GetOrCreateLine();
-            line.X1 = 0;
-            line.Y1 = y;
-            line.X2 = ActualWidth;
-            line.Y2 = y;
-            line.Stroke = brush;
-
-            if (GridlineStrokeDashArray != null && GridlineStrokeDashArray.Count > 0)
-            {
-                line.StrokeDashArray = GridlineStrokeDashArray;
-            }
-            else
-            {
-                line.StrokeDashArray = null;
-            }
-
-            Children.Add(line);
+            canvas.DrawLine(0, (float)y, (float)ActualWidth, (float)y, paint);
         }
     }
 }
