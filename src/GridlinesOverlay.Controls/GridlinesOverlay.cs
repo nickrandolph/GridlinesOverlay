@@ -17,6 +17,7 @@ public class GridlinesOverlay : SKCanvasElement
 {
     private bool _isInSpacingCycleMode = false;
     private float[]? _cachedDashIntervals = null;
+    private SKPathEffect? _cachedPathEffect = null;
 
     /// <summary>
     /// Identifies the DefaultSpacing dependency property.
@@ -296,7 +297,7 @@ public class GridlinesOverlay : SKCanvasElement
 
         if (isCtrlPressed && e.Key == VirtualKey.G)
         {
-            if (!_isInSpacingCycleMode || Visibility == Visibility.Collapsed)
+            if (!_isInSpacingCycleMode)
             {
                 // First Ctrl+G press: toggle visibility
                 if (Visibility == Visibility.Collapsed)
@@ -377,6 +378,8 @@ public class GridlinesOverlay : SKCanvasElement
         if (d is GridlinesOverlay overlay)
         {
             overlay._cachedDashIntervals = null; // Invalidate cache
+            overlay._cachedPathEffect?.Dispose();
+            overlay._cachedPathEffect = null;
             overlay.Invalidate();
         }
     }
@@ -508,7 +511,12 @@ public class GridlinesOverlay : SKCanvasElement
                     _cachedDashIntervals[i] = (float)GridlineStrokeDashArray[i];
                 }
             }
-            paint.PathEffect = SKPathEffect.CreateDash(_cachedDashIntervals, 0);
+            
+            if (_cachedPathEffect == null)
+            {
+                _cachedPathEffect = SKPathEffect.CreateDash(_cachedDashIntervals, 0);
+            }
+            paint.PathEffect = _cachedPathEffect;
         }
 
         // Draw vertical lines
