@@ -232,6 +232,10 @@ public class GridlinesOverlay : SKCanvasElement
         // Remove keyboard handler
         DetachKeyboardHandlers();
 
+        // Dispose cached PathEffect to prevent resource leaks
+        _cachedPathEffect?.Dispose();
+        _cachedPathEffect = null;
+
         // Reset spacing cycle mode so a new session starts from the initial state
         _isInSpacingCycleMode = false;
     }
