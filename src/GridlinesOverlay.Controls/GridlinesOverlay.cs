@@ -249,8 +249,9 @@ public class GridlinesOverlay : Canvas
             }
             else
             {
-                // Control was disabled - detach keyboard handlers
+                // Control was disabled - detach keyboard handlers and reset spacing cycle mode
                 overlay.DetachKeyboardHandlers();
+                overlay._isInSpacingCycleMode = false;
             }
         }
     }
