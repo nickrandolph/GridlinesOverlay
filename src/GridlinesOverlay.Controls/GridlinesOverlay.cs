@@ -4,7 +4,8 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using SkiaSharp;
-using SkiaSharp.Views.Windows;
+using Uno.WinUI.Graphics2DSK;
+using Windows.Foundation;
 using Windows.System;
 
 namespace GridlinesOverlay.Controls;
@@ -12,7 +13,7 @@ namespace GridlinesOverlay.Controls;
 /// <summary>
 /// A semi-transparent overlay control that displays gridlines for alignment purposes.
 /// </summary>
-public class GridlinesOverlay : SKXamlCanvas
+public class GridlinesOverlay : SKCanvasElement
 {
     private bool _isInSpacingCycleMode = false;
     private float[]? _cachedDashIntervals = null;
@@ -213,7 +214,6 @@ public class GridlinesOverlay : SKXamlCanvas
         Loaded += OnLoaded;
         Unloaded += OnUnloaded;
         SizeChanged += OnSizeChanged;
-        PaintSurface += OnPaintSurface;
     }
 
     private void OnLoaded(object sender, RoutedEventArgs e)
@@ -476,12 +476,11 @@ public class GridlinesOverlay : SKXamlCanvas
         }
     }
 
-    private void OnPaintSurface(object? sender, SKPaintSurfaceEventArgs e)
+    protected override void RenderOverride(SKCanvas canvas, Size size)
     {
-        var canvas = e.Surface.Canvas;
         canvas.Clear(SKColors.Transparent);
 
-        if (ActualWidth <= 0 || ActualHeight <= 0 || GridSpacing <= 0)
+        if (size.Width <= 0 || size.Height <= 0 || GridSpacing <= 0)
         {
             return;
         }
@@ -513,15 +512,15 @@ public class GridlinesOverlay : SKXamlCanvas
         }
 
         // Draw vertical lines
-        for (double x = GridSpacing; x < ActualWidth; x += GridSpacing)
+        for (double x = GridSpacing; x < size.Width; x += GridSpacing)
         {
-            canvas.DrawLine((float)x, 0, (float)x, (float)ActualHeight, paint);
+            canvas.DrawLine((float)x, 0, (float)x, (float)size.Height, paint);
         }
 
         // Draw horizontal lines
-        for (double y = GridSpacing; y < ActualHeight; y += GridSpacing)
+        for (double y = GridSpacing; y < size.Height; y += GridSpacing)
         {
-            canvas.DrawLine(0, (float)y, (float)ActualWidth, (float)y, paint);
+            canvas.DrawLine(0, (float)y, (float)size.Width, (float)y, paint);
         }
     }
 }
