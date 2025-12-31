@@ -99,14 +99,14 @@ public class GridlinesOverlay : Canvas
             new PropertyMetadata(null, OnGridlineStrokeDashArrayChanged));
 
     /// <summary>
-    /// Identifies the IsEnabled dependency property.
+    /// Identifies the IsShortcutKeyEnabled dependency property.
     /// </summary>
-    public static readonly DependencyProperty IsEnabledProperty =
+    public static readonly DependencyProperty IsShortcutKeyEnabledProperty =
         DependencyProperty.Register(
-            nameof(IsEnabled),
+            nameof(IsShortcutKeyEnabled),
             typeof(bool),
             typeof(GridlinesOverlay),
-            new PropertyMetadata(true, OnIsEnabledChanged));
+            new PropertyMetadata(true, OnIsShortcutKeyEnabledChanged));
 
     /// <summary>
     /// Gets or sets the default spacing used when the gridlines are made visible.
@@ -202,10 +202,10 @@ public class GridlinesOverlay : Canvas
     /// Gets or sets a value indicating whether the keyboard shortcut is enabled.
     /// When false, the Ctrl+G keyboard shortcut will not respond.
     /// </summary>
-    public bool IsEnabled
+    public bool IsShortcutKeyEnabled
     {
-        get => (bool)GetValue(IsEnabledProperty);
-        set => SetValue(IsEnabledProperty, value);
+        get => (bool)GetValue(IsShortcutKeyEnabledProperty);
+        set => SetValue(IsShortcutKeyEnabledProperty, value);
     }
 
     public GridlinesOverlay()
@@ -219,7 +219,7 @@ public class GridlinesOverlay : Canvas
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
         // Only attach keyboard handlers if the control is enabled
-        if (IsEnabled)
+        if (IsShortcutKeyEnabled)
         {
             AttachKeyboardHandlers();
         }
@@ -235,7 +235,7 @@ public class GridlinesOverlay : Canvas
         _isInSpacingCycleMode = false;
     }
 
-    private static void OnIsEnabledChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    private static void OnIsShortcutKeyEnabledChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         if (d is GridlinesOverlay overlay)
         {
@@ -286,7 +286,7 @@ public class GridlinesOverlay : Canvas
     private void OnRootKeyDown(object sender, KeyRoutedEventArgs e)
     {
         // Only handle keyboard shortcuts if the control is enabled
-        if (!IsEnabled)
+        if (!IsShortcutKeyEnabled)
         {
             return;
         }
@@ -331,7 +331,7 @@ public class GridlinesOverlay : Canvas
     private void OnRootKeyUp(object sender, KeyRoutedEventArgs e)
     {
         // Only handle keyboard shortcuts if the control is enabled
-        if (!IsEnabled)
+        if (!IsShortcutKeyEnabled)
         {
             return;
         }
